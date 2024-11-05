@@ -39,32 +39,33 @@ parser.add_argument(
 DETERMINED_DATASET = "mnist" ### mnist or cifar10
 
 NUM_CLIENTS = 10
-NUM_ROUNDS = 20
+NUM_ROUNDS = 5
 SELECTED_RATIO = 1.0
 
 # Flower client, adapted from Pytorch quickstart example
 class FlowerClient(fl.client.NumPyClient):
     def __init__(self, trainset, valset, msg_type, cid, roundNum):
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() start {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        from flwr.common.orchid_logger import flwrsim_logger
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() start {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
         self.trainset = trainset
         self.valset = valset
 
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() / self.model = Net() {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() / self.model = Net() {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
         # Instantiate model
         self.model = Net()
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() done Net() {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() done Net() {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
 
         # Determine device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)  # send model to device
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() END {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("FlowerClient __init__() END {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
 
     def get_parameters(self, config):
@@ -72,23 +73,17 @@ class FlowerClient(fl.client.NumPyClient):
 
     def fit(self, parameters, config):
         ###==time
-        print("FlowerClient train:\n", config)
-        fit_time_collect = True
-        cid = None
-        roundNum = None
-        if "cid" not in config.keys() or "roundNum" not in config.keys():
-            print("\n\nRUNNING sim.py/FlowerClient.fit()\nlack of \"cid\" or \"roundNum\" in config. no logging.\n\n")
-            fit_time_collect = False
-        else:
+        from flwr.common.orchid_logger import flwrsim_logger
+        if time_collect:
             cid = config["cid"]
-            roundNum = config["roundNum"]
+            roundNum = config["round_num"]
         ###==
         ###==time
-        if time_collect and fit_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("into client.func() / gonna set_params() {}; cid ==={}=== round #{}".format(MessageType.TRAIN, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("into client.func() / gonna set_params() {}; cid ==={}=== round{}--".format(MessageType.TRAIN, cid, roundNum), time.time()))
         ###==
         set_params(self.model, parameters)
         ###==time
-        if time_collect and fit_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set_params() / gonna set DataLoader(not create dataset) {}; cid ==={}=== round #{}".format(MessageType.TRAIN, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set_params() / gonna set DataLoader(not create dataset) {}; cid ==={}=== round{}--".format(MessageType.TRAIN, cid, roundNum), time.time()))
         ###==
 
         # Read from config
@@ -97,18 +92,18 @@ class FlowerClient(fl.client.NumPyClient):
         # Construct dataloader
         trainloader = DataLoader(self.trainset, batch_size=batch, shuffle=True)
         ###==time
-        if time_collect and fit_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set DataLoader(not create dataset) / gonna set optimizer {}; cid ==={}=== round #{}".format(MessageType.TRAIN, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set DataLoader(not create dataset) / gonna set optimizer {}; cid ==={}=== round{}--".format(MessageType.TRAIN, cid, roundNum), time.time()))
         ###==
 
         # Define optimizer
         optimizer = torch.optim.SGD(self.model.parameters(), lr=0.01, momentum=0.9)
         ###==time
-        if time_collect and fit_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set optimizer / gonna train()/test() epochs {}; cid ==={}=== round #{}".format(MessageType.TRAIN, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set optimizer / gonna train()/test() epochs {}; cid ==={}=== round{}--".format(MessageType.TRAIN, cid, roundNum), time.time()))
         ###==
         # Train
         train(self.model, trainloader, optimizer, epochs=epochs, device=self.device)
         ###==time
-        if time_collect and fit_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done train()/test() epochs / gonna return to ray_client_proxy {}; cid ==={}=== round #{}".format(MessageType.TRAIN, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done train()/test() epochs / gonna return to ray_client_proxy {}; cid ==={}=== round{}--".format(MessageType.TRAIN, cid, roundNum), time.time()))
         ###==
 
         # Return local model and statistics
@@ -116,38 +111,32 @@ class FlowerClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         ###==time
-        print("FlowerClient eval:\n", config)
-        eval_time_collect = True
-        cid = None
-        roundNum = None
-        if "cid" not in config.keys() or "roundNum" not in config.keys():
-            print("RUNNING sim.py/FlowerClient.evaluate()\nlack of \"cid\" or \"roundNum\" in config. no logging.\n\n")
-            eval_time_collect = False
-        else:
+        from flwr.common.orchid_logger import flwrsim_logger
+        if time_collect:
             cid = config["cid"]
-            roundNum = config["roundNum"]
+            roundNum = config["round_num"]
         ###==
         ###==time
-        if time_collect and eval_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("into client.func() / gonna set_params() {}; cid ==={}=== round #{}".format(MessageType.EVALUATE, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("into client.func() / gonna set_params() {}; cid ==={}=== round{}--".format(MessageType.EVALUATE, cid, roundNum), time.time()))
         ###==
         set_params(self.model, parameters)
         ###==time
-        if time_collect and eval_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set_params() / gonna set DataLoader(not create dataset) {}; cid ==={}=== round #{}".format(MessageType.EVALUATE, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set_params() / gonna set DataLoader(not create dataset) {}; cid ==={}=== round{}--".format(MessageType.EVALUATE, cid, roundNum), time.time()))
         ###==
 
         # Construct dataloader
         valloader = DataLoader(self.valset, batch_size=64)
         ###==time
-        if time_collect and eval_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set DataLoader(not create dataset) / gonna set optimizer {}; cid ==={}=== round #{}".format(MessageType.EVALUATE, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set DataLoader(not create dataset) / gonna set optimizer {}; cid ==={}=== round{}--".format(MessageType.EVALUATE, cid, roundNum), time.time()))
         ###==
         ###==time
-        if time_collect and eval_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set optimizer / gonna train()/test() epochs {}; cid ==={}=== round #{}".format(MessageType.EVALUATE, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done set optimizer / gonna train()/test() epochs {}; cid ==={}=== round{}--".format(MessageType.EVALUATE, cid, roundNum), time.time()))
         ###==
 
         # Evaluate
         loss, accuracy = test(self.model, valloader, device=self.device)
         ###==time
-        if time_collect and eval_time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done train()/test() epochs / gonna return to ray_client_proxy {}; cid ==={}=== round #{}".format(MessageType.EVALUATE, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done train()/test() epochs / gonna return to ray_client_proxy {}; cid ==={}=== round{}--".format(MessageType.EVALUATE, cid, roundNum), time.time()))
         ###==
 
         # Return statistics
@@ -165,13 +154,14 @@ def get_client_fn(dataset: FederatedDataset):
         """Construct a FlowerClient with its own dataset partition."""
         msg_type, cid, roundNum = cid.split("!!!")
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("ray_client_fn start {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        from flwr.common.orchid_logger import flwrsim_logger
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("ray_client_fn start {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
 
         # Let's get the partition corresponding to the i-th client
         client_dataset = dataset.load_partition(int(cid), "train")
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done load_partition / split and transform dataset {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done load_partition / split and transform dataset {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
 
         # Now let's split it into train (90%) and validation (10%)
@@ -184,7 +174,7 @@ def get_client_fn(dataset: FederatedDataset):
         trainset = trainset.with_transform(apply_transforms)
         valset = valset.with_transform(apply_transforms)
         ###==time
-        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done split and transform dataset / call FlowerClient {}; cid ==={}=== round #{}".format(msg_type, cid, roundNum), time.time()))
+        if time_collect: flwrsim_logger.info("event: {0} | time: {1}".format("done split and transform dataset / call FlowerClient {}; cid ==={}=== round{}--".format(msg_type, cid, roundNum), time.time()))
         ###==
 
         # Create and return client
@@ -294,7 +284,6 @@ def main():
     }
 
     # Start simulation
-    # print("\n=*=*=*\n{}: {}\n=*=*=*\n".format("init start", time.time()))
     fl.simulation.start_simulation(
         client_fn=get_client_fn(mnist_fds),
         num_clients=NUM_CLIENTS,

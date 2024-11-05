@@ -58,7 +58,7 @@ class RayActorClientProxy(ClientProxy):
     ):
         super().__init__(cid=str(node_id))
         self.node_id = node_id
-        self.partition_id = partition_id
+        self.partition_id = partition_id # range(num_clients)
 
         def _load_app() -> ClientApp:
             return ClientApp(client_fn=client_fn)
@@ -82,18 +82,39 @@ class RayActorClientProxy(ClientProxy):
 
         # Retrieve context
         context = self.proxy_state.retrieve_context(run_id=run_id)
-        partition_id_str = str(context.node_config[PARTITION_ID_KEY])
+        partition_id_str = str(context.node_config[PARTITION_ID_KEY]) # only for ray.actorpool to trace the future
+
+        # edit message and context for logging
+        def get_msg_type(message: Message) -> str:
+            if message.metadata.message_type == MessageType.TRAIN:
+                return "training"
+            if message.metadata.message_type == MessageType.EVALUATE:
+                return "evaluating"
+            else:
+                return "x"
+        def append_cid_and_round_num(message: Message, cid, round_num) -> None:
+            for k, v in message.content.configs_records.items():
+                if k in ["fitins.config", "evaluateins.config"]:
+                    v["cid"] = cid
+                    v["round_num"] = round_num
+                
+        msg_type = get_msg_type(message)
+        round_num = str(message.metadata.group_id)
+        original_cid = str(context.node_config['partition-id']) # remember to restore
+        context.node_config['partition-id'] = "{}!!!{}!!!{}".format(msg_type, original_cid, round_num)
+        append_cid_and_round_num(message, original_cid, round_num)
 
         try:
             self.actor_pool.submit_client_job(
                 lambda a, a_fn, mssg, partition_id, context: a.run.remote(
                     a_fn, mssg, partition_id, context
-                ),
-                (self.app_fn, message, partition_id_str, context),
+                ), # actor_fn
+                (self.app_fn, message, partition_id_str, context), # job: tuple[ClientAppFn, Message, str, Context]
             )
             out_mssg, updated_context = self.actor_pool.get_client_result(
                 partition_id_str, timeout
             )
+            updated_context.node_config['partition-id'] = original_cid # restore partition-id (original_cid)
 
             # Update state
             self.proxy_state.update_context(run_id=run_id, context=updated_context)
@@ -180,7 +201,7 @@ class RayActorClientProxy(ClientProxy):
             recordset,
             message_type=MessageType.TRAIN,
             timeout=timeout,
-            group_id=group_id,
+            group_id=group_id, # group_id is round_num (training starts from round#1)
         )
 
         message_out = self._submit_job(message, timeout)
