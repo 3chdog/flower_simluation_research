@@ -49,10 +49,12 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
+import torchvision
+resnet50_for_cifar10 = torchvision.models.resnet50(num_classes=10)
 
 def load_data(partition_id: int):
     """Load partition CIFAR10 data."""
-    fds = FederatedDataset(dataset="cifar10", partitioners={"train": 10})
+    fds = FederatedDataset(dataset="cifar10", partitioners={"train": 2})
     partition = fds.load_partition(partition_id)
     # Divide data on each node: 80% train, 20% test
     partition_train_test = partition.train_test_split(test_size=0.2, seed=42)
@@ -81,6 +83,7 @@ def train(
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = torch.optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), weight_decay=1e-5)
 
     print(f"Training {epochs} epoch(s) w/ {len(trainloader)} batches each")
 

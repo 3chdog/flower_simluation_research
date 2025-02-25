@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Federated Learning with PyTorch and Flower (Quickstart Example)"
 license = "Apache-2.0"
 dependencies = [
-    "flwr[simulation]>=1.15.2",
+    "flwr[simulation]>=1.15.1",
     "flwr-datasets[vision]>=0.5.0",
     "torch==2.5.1",
     "torchvision==0.20.1",
@@ -25,11 +25,16 @@ serverapp = "pytorchexample.server_app:app"
 clientapp = "pytorchexample.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 3
+num-server-rounds = 2
 fraction-evaluate = 0.5
 local-epochs = 1
-learning-rate = 0.1
-batch-size = 32
+learning-rate = 0.001
+batch-size = 64
+dataset_model_type = "cifar10_lenet" # (mnist, cifar10, cifar10_lenet)
+
+# cifar10: cifar10 and resnet50
+# cifar10-lenet: cifar10 and lenet
+# mnist: mnist and resnet50
 
 [tool.flwr.federations]
 default = "local-simulation"
@@ -38,6 +43,6 @@ default = "local-simulation"
 options.num-supernodes = 10
 
 [tool.flwr.federations.local-simulation-gpu]
-options.num-supernodes = 10
+options.num-supernodes = 2
 options.backend.client-resources.num-cpus = 2 # each ClientApp assumes to use 2CPUs
 options.backend.client-resources.num-gpus = 0.2 # at most 5 ClientApp will run in a given GPU

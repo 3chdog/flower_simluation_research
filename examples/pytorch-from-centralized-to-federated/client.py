@@ -88,6 +88,7 @@ def main() -> None:
 
     # Load model
     model = cifar.Net().to(DEVICE).train()
+    model = cifar.resnet50_for_cifar10.to(DEVICE).train()
 
     # Perform a single forward pass to properly initialize BatchNorm
     _ = model(next(iter(trainloader))["img"].to(DEVICE))

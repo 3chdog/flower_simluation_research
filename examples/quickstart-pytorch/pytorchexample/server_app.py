@@ -19,14 +19,27 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
     return {"accuracy": sum(accuracies) / sum(examples)}
 
 
+def get_model(dataset_model_type: str):
+    if dataset_model_type == "mnist":
+        return Net()
+    elif dataset_model_type == "cifar10":
+        from pytorchexample.task import resnet50_for_cifar10
+        return resnet50_for_cifar10
+    elif dataset_model_type == "cifar10_lenet":
+        return Net()
+    else:
+        raise ValueError("Invalid dataset_model_type")
+
 def server_fn(context: Context):
     """Construct components that set the ServerApp behaviour."""
+    print("server_fn", context)
 
     # Read from config
     num_rounds = context.run_config["num-server-rounds"]
 
     # Initialize model parameters
-    ndarrays = get_weights(Net())
+    model = get_model(context.run_config["dataset_model_type"])
+    ndarrays = get_weights(model)
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Define the strategy

@@ -31,6 +31,8 @@ class Net(nn.Module):
         x = F.relu(self.fc2(x))
         return self.fc3(x)
 
+import torchvision
+resnet50_for_cifar10 = torchvision.models.resnet50(num_classes=10)
 
 def get_weights(net):
     return [val.cpu().numpy() for _, val in net.state_dict().items()]
@@ -80,6 +82,7 @@ def train(net, trainloader, valloader, epochs, learning_rate, device):
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+    # optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, betas=(0.9, 0.999), weight_decay=1e-5)
     net.train()
     for _ in range(epochs):
         for batch in trainloader:
