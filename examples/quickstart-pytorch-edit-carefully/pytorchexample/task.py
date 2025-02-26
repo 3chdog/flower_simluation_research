@@ -60,7 +60,7 @@ def set_weights(net, parameters):
 fds = None  # Cache FederatedDataset
 
 
-def load_data(partition_id: int, num_partitions: int, batch_size: int):
+def load_data(partition_id: int, num_partitions: int, batch_size: int, seed: int = 42):
     """Load partition CIFAR10 data."""
     # Only initialize `FederatedDataset` once
     global fds
@@ -72,7 +72,7 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int):
         )
     partition = fds.load_partition(partition_id)
     # Divide data on each node: 80% train, 20% test
-    partition_train_test = partition.train_test_split(test_size=0.2, seed=42)
+    partition_train_test = partition.train_test_split(test_size=0.2, seed=seed)
     pytorch_transforms = Compose(
         [ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
@@ -90,18 +90,22 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int):
     return trainloader, testloader
 
 
-def train(net, trainloader, valloader, epochs, learning_rate, device, rounds, seed=42):
+def train(net, trainloader, valloader, epochs, learning_rate, device, rounds, seed=None):
     """Train the model on the training set."""
-    set_seed(seed)
-    seeds_for_epochs = generate_seeds_for_epochs(epochs*rounds, seed)
+    if seed is not None:
+        set_seed(seed)
+        seeds_for_epochs = generate_seeds_for_epochs(epochs*rounds, seed)
 
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
     net.train()
     for epoch in range(epochs):
-        seed_for_this_epoch = seeds_for_epochs[((rounds-1) * epochs + epoch) % len(seeds_for_epochs)]
-        torch.manual_seed(seed_for_this_epoch)
+        # set seed for trainloader to ensure the same seed sequence for each epoch
+        if seed is not None:
+            seed_for_this_epoch = seeds_for_epochs[((rounds-1) * epochs + epoch) % len(seeds_for_epochs)]
+            torch.manual_seed(seed_for_this_epoch)
+        # batch training
         for batch in trainloader:
             images = batch["img"]
             labels = batch["label"]

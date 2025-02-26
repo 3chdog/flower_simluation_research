@@ -52,14 +52,14 @@ def client_fn(context: Context):
     num_partitions = context.node_config["num-partitions"]
 
     # Read run_config to fetch hyperparameters relevant to this run
+    seed = context.run_config.get("seed", None)
     batch_size = context.run_config["batch-size"]
-    trainloader, valloader = load_data(partition_id, num_partitions, batch_size)
+    trainloader, valloader = load_data(partition_id, num_partitions, batch_size, seed)
     local_epochs = context.run_config["local-epochs"]
     learning_rate = context.run_config["learning-rate"]
 
     # server_rounds for generating seeds for epochs
     rounds = context.run_config["num-server-rounds"]
-    seed = context.run_config["seed"]
 
     # Return Client instance
     return FlowerClient(trainloader, valloader, local_epochs, learning_rate, partition_id, rounds, seed).to_client()

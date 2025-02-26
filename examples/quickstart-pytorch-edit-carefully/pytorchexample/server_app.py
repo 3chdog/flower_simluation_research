@@ -26,7 +26,11 @@ def server_fn(context: Context):
     num_rounds = context.run_config["num-server-rounds"]
 
     # Initialize model parameters
-    set_seed(42)
+    seed = context.run_config.get("seed", None)
+    if seed is None:
+        print("Not set seed, run FL generally.")
+    else:
+        set_seed(seed)
     ndarrays = get_weights(Net())
     print("\n===  server initial parameters:\n{}\n===\n".format(ndarrays[0].flatten()[:30]))
     parameters = ndarrays_to_parameters(ndarrays)
