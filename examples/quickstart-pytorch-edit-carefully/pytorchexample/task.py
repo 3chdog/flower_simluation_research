@@ -22,6 +22,10 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False  # 可能會降低性能，但可確保結果一致
 
+def generate_seeds_for_epochs(num_random_numbers: int, seed:int):
+    random.seed(seed)
+    return random.sample(range(num_random_numbers*2), round(num_random_numbers*1.5))
+
 class Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: A 60 Minute Blitz')"""
 
@@ -86,15 +90,18 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int):
     return trainloader, testloader
 
 
-def train(net, trainloader, valloader, epochs, learning_rate, device):
+def train(net, trainloader, valloader, epochs, learning_rate, device, rounds, seed=42):
     """Train the model on the training set."""
-    set_seed(42)
+    set_seed(seed)
+    seeds_for_epochs = generate_seeds_for_epochs(epochs*rounds, seed)
+
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
     net.train()
-    for _ in range(epochs):
-        torch.manual_seed(42)
+    for epoch in range(epochs):
+        seed_for_this_epoch = seeds_for_epochs[((rounds-1) * epochs + epoch) % len(seeds_for_epochs)]
+        torch.manual_seed(seed_for_this_epoch)
         for batch in trainloader:
             images = batch["img"]
             labels = batch["label"]
@@ -117,7 +124,7 @@ def test(net, testloader, device):
     criterion = torch.nn.CrossEntropyLoss()
     correct, loss = 0, 0.0
     with torch.no_grad():
-        torch.manual_seed(42)
+        # torch.manual_seed(42) # reproducible even not set seed here 
         for batch in testloader:
             images = batch["img"].to(device)
             labels = batch["label"].to(device)

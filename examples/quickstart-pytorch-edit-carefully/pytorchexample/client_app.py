@@ -4,18 +4,21 @@ import torch
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
 
-from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train
+from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train, generate_seeds_for_epochs
 
 
 # Define Flower Client
 class FlowerClient(NumPyClient):
-    def __init__(self, trainloader, valloader, local_epochs, learning_rate):
+    def __init__(self, trainloader, valloader, local_epochs, learning_rate, cid, rounds, seed):
         self.net = Net()
         self.trainloader = trainloader
         self.valloader = valloader
         self.local_epochs = local_epochs
         self.lr = learning_rate
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.cid = cid
+        self.rounds = rounds
+        self.seed = seed
 
     def fit(self, parameters, config):
         # print("\n===  config\n{}\n===\n".format(config))
@@ -29,6 +32,8 @@ class FlowerClient(NumPyClient):
             self.local_epochs,
             self.lr,
             self.device,
+            self.rounds,
+            self.seed,
         )
         return get_weights(self.net), len(self.trainloader.dataset), results
 
@@ -52,8 +57,12 @@ def client_fn(context: Context):
     local_epochs = context.run_config["local-epochs"]
     learning_rate = context.run_config["learning-rate"]
 
+    # server_rounds for generating seeds for epochs
+    rounds = context.run_config["num-server-rounds"]
+    seed = context.run_config["seed"]
+
     # Return Client instance
-    return FlowerClient(trainloader, valloader, local_epochs, learning_rate).to_client()
+    return FlowerClient(trainloader, valloader, local_epochs, learning_rate, partition_id, rounds, seed).to_client()
 
 
 # Flower ClientApp
