@@ -32,12 +32,13 @@ learning-rate = 0.1
 batch-size = 32
 
 [tool.flwr.federations]
-default = "local-simulation"
+default = "local-simulation-gpu"
 
 [tool.flwr.federations.local-simulation]
 options.num-supernodes = 10
 
 [tool.flwr.federations.local-simulation-gpu]
-options.num-supernodes = 10
+# num-partitions in node_config is referred to num-supernodes
+options.num-supernodes = 5
 options.backend.client-resources.num-cpus = 2 # each ClientApp assumes to use 2CPUs
 options.backend.client-resources.num-gpus = 0.2 # at most 5 ClientApp will run in a given GPU
