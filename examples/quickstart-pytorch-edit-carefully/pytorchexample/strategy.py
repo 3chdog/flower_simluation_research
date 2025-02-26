@@ -8,6 +8,10 @@ from flwr.common import (
 from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy import FedAvg
 
+def on_fit_config(server_round: int):
+    """Construct `config` that clients receive when running `fit()`"""
+    return {"round_num": server_round}
+
 class FedAvgWithSaving(FedAvg):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

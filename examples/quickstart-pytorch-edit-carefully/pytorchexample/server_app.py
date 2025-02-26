@@ -6,7 +6,7 @@ from flwr.common import Context, Metrics, ndarrays_to_parameters
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 
 from pytorchexample.task import Net, get_weights, set_seed
-from pytorchexample.strategy import FedAvgWithSaving
+from pytorchexample.strategy import FedAvgWithSaving, on_fit_config
 
 
 # Define metric aggregation function
@@ -38,6 +38,7 @@ def server_fn(context: Context):
         min_available_clients=2,
         evaluate_metrics_aggregation_fn=weighted_average,
         initial_parameters=parameters,
+        on_fit_config_fn=on_fit_config, # send round number in "config" to clients
     )
     config = ServerConfig(num_rounds=num_rounds)
 
