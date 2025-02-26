@@ -25,12 +25,15 @@ serverapp = "pytorchexample.server_app:app"
 clientapp = "pytorchexample.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 100
+num-server-rounds = 6
 fraction-evaluate = 0.5
 local-epochs = 1
 learning-rate = 0.001
 batch-size = 32
 seed = 45
+model-name = "lenet" # ("lenet", "resnet50", "lenet_for_cifar10")
+dataset-name = "cifar10" # ("cifar10", "mnist")
+saving-period = 5
 
 [tool.flwr.federations]
 default = "local-simulation-gpu"
