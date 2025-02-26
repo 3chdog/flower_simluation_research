@@ -4,9 +4,9 @@ from typing import List, Tuple
 
 from flwr.common import Context, Metrics, ndarrays_to_parameters
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
-from flwr.server.strategy import FedAvg
 
 from pytorchexample.task import Net, get_weights, set_seed
+from pytorchexample.strategy import FedAvgWithSaving
 
 
 # Define metric aggregation function
@@ -26,11 +26,13 @@ def server_fn(context: Context):
     num_rounds = context.run_config["num-server-rounds"]
 
     # Initialize model parameters
+    set_seed(42)
     ndarrays = get_weights(Net())
+    print("\n===  server initial parameters:\n{}\n===\n".format(ndarrays[0].flatten()[:30]))
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Define the strategy
-    strategy = FedAvg(
+    strategy = FedAvgWithSaving(
         fraction_fit=1.0,
         fraction_evaluate=context.run_config["fraction-evaluate"],
         min_available_clients=2,

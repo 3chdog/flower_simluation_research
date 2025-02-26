@@ -4,7 +4,7 @@ import torch
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
 
-from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train, set_seed
+from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train
 
 
 # Define Flower Client
@@ -18,6 +18,8 @@ class FlowerClient(NumPyClient):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     def fit(self, parameters, config):
+        # print("\n===  config\n{}\n===\n".format(config))
+        # print("\n===  parameters:\n{}\n===\n".format(parameters[0].flatten()[:30]))
         """Train the model with data of this client."""
         set_weights(self.net, parameters)
         results = train(

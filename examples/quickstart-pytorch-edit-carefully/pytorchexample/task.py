@@ -24,6 +24,15 @@ def set_seed(seed=42, loader=None):
     except AttributeError:
         pass
 
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 用於多 GPU 訓練
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False  # 可能會降低性能，但可確保結果一致
+
 class Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: A 60 Minute Blitz')"""
 
@@ -90,11 +99,13 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int):
 
 def train(net, trainloader, valloader, epochs, learning_rate, device):
     """Train the model on the training set."""
+    set_seed(42)
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
     net.train()
     for _ in range(epochs):
+        torch.manual_seed(42)
         for batch in trainloader:
             images = batch["img"]
             labels = batch["label"]
@@ -117,6 +128,7 @@ def test(net, testloader, device):
     criterion = torch.nn.CrossEntropyLoss()
     correct, loss = 0, 0.0
     with torch.no_grad():
+        torch.manual_seed(42)
         for batch in testloader:
             images = batch["img"].to(device)
             labels = batch["label"].to(device)
