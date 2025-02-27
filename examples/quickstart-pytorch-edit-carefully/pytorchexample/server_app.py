@@ -8,7 +8,7 @@ from typing import List, Tuple
 from flwr.common import Context, Metrics, ndarrays_to_parameters
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 
-from pytorchexample.task import Net, get_weights, set_weights, set_seed
+from pytorchexample.task import Net, get_weights, get_saving_file_path, set_seed
 from pytorchexample.strategy import FedAvgWithSaving, on_fit_config
 
 
@@ -24,6 +24,7 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
 
 def server_fn(context: Context):
     """Construct components that set the ServerApp behaviour."""
+    print(context)
 
     # Read from config
     num_rounds = context.run_config["num-server-rounds"]
@@ -35,12 +36,10 @@ def server_fn(context: Context):
         "model_name": context.run_config["model-name"],
         "dataset_name": context.run_config["dataset-name"],
         "seed": seed,
-        "learning_rate": context.run_config["learning-rate"],
+        "learning_rate": context.run_config["optim-learning-rate"],
         "saving_folder": "./models/{}".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")),
         "saving_period": context.run_config.get("saving-period", None),
     }
-    if not os.path.exists(info_for_model_saving["saving_folder"]):
-        os.makedirs(info_for_model_saving["saving_folder"])
 
     # Initialize model parameters
     init_weights_path = context.run_config.get("init-weights", None)
@@ -59,15 +58,17 @@ def server_fn(context: Context):
 
     # save initial model weights
     print(f"Saving round #{0} aggregated_ndarrays...")
-    saving_file_name = "{}-{}-num-{}-seed-{}-lr-{}-round-{}-weights.npz".format(
+    if not os.path.exists(info_for_model_saving["saving_folder"]):
+        os.makedirs(info_for_model_saving["saving_folder"])
+    saving_file_path = get_saving_file_path(
         info_for_model_saving["dataset_name"],
         info_for_model_saving["model_name"],
         "notyet",
         info_for_model_saving.get("seed", "None"),
         info_for_model_saving["learning_rate"],
         0,
+        info_for_model_saving["saving_folder"],
     )
-    saving_file_path = os.path.join(info_for_model_saving["saving_folder"], saving_file_name)
     np.savez(saving_file_path, *ndarrays)
 
     # Define the strategy

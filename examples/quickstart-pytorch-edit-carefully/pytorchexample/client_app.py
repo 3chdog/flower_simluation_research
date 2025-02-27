@@ -4,17 +4,23 @@ import torch
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
 
-from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train, generate_seeds_for_epochs
+from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train
 
+def get_optim_params(run_config: dict):
+    optim_params = {}
+    for k, v in run_config.items():
+        if k.startswith("optim-"):
+            optim_params[k] = v
+    return optim_params
 
 # Define Flower Client
 class FlowerClient(NumPyClient):
-    def __init__(self, trainloader, valloader, local_epochs, learning_rate, cid, rounds, seed):
+    def __init__(self, trainloader, valloader, local_epochs, optim_params, cid, rounds, seed):
         self.net = Net()
         self.trainloader = trainloader
         self.valloader = valloader
         self.local_epochs = local_epochs
-        self.lr = learning_rate
+        self.optim_params = optim_params
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.cid = cid
         self.rounds = rounds
@@ -30,7 +36,7 @@ class FlowerClient(NumPyClient):
             self.trainloader,
             self.valloader,
             self.local_epochs,
-            self.lr,
+            self.optim_params,
             self.device,
             self.rounds,
             self.seed,
@@ -56,13 +62,13 @@ def client_fn(context: Context):
     batch_size = context.run_config["batch-size"]
     trainloader, valloader = load_data(partition_id, num_partitions, batch_size, seed)
     local_epochs = context.run_config["local-epochs"]
-    learning_rate = context.run_config["learning-rate"]
+    optim_params = get_optim_params(context.run_config)
 
     # server_rounds for generating seeds for epochs
     rounds = context.run_config["num-server-rounds"]
 
     # Return Client instance
-    return FlowerClient(trainloader, valloader, local_epochs, learning_rate, partition_id, rounds, seed).to_client()
+    return FlowerClient(trainloader, valloader, local_epochs, optim_params, partition_id, rounds, seed).to_client()
 
 
 # Flower ClientApp

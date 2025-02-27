@@ -25,16 +25,18 @@ serverapp = "pytorchexample.server_app:app"
 clientapp = "pytorchexample.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 6
+num-server-rounds = 3
 fraction-evaluate = 0.5
 local-epochs = 1
-learning-rate = 0.001
+optim-learning-rate = 0.001
+optim-momentum = 0.9 # 0
+optim-weight-decay = 0.0001 # 0
 batch-size = 32
-seed = 45
+seed = 42
 model-name = "lenet" # ("lenet", "resnet50", "lenet_for_cifar10")
 dataset-name = "cifar10" # ("cifar10", "mnist")
 saving-period = 5
-init-weights = "./cifar10-lenet-num-2-seed-45-lr-0.001-round-2-weights.npz"
+# init-weights = "./cifar10-lenet-num-2-seed-45-lr-0.001-round-2-weights.npz"
 
 [tool.flwr.federations]
 default = "local-simulation-gpu"

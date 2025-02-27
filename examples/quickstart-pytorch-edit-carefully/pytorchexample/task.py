@@ -1,5 +1,6 @@
 """pytorchexample: A Flower / PyTorch app."""
 
+import os
 from collections import OrderedDict
 
 import torch
@@ -25,6 +26,17 @@ def set_seed(seed=42):
 def generate_seeds_for_epochs(num_random_numbers: int, seed:int):
     random.seed(seed)
     return random.sample(range(num_random_numbers*2), round(num_random_numbers*1.5))
+
+def get_saving_file_path(dataset_name, model_name, num_client, seed, learning_rate, round_num, saving_folder="./models"):
+    file_name = "{}-{}-num-{}-seed-{}-lr-{}-round-{}-weights.npz".format(
+        dataset_name,
+        model_name,
+        num_client,
+        seed,
+        learning_rate,
+        round_num,
+    )
+    return os.path.join(saving_folder, file_name)
 
 class Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: A 60 Minute Blitz')"""
@@ -90,7 +102,7 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int, seed: int
     return trainloader, testloader
 
 
-def train(net, trainloader, valloader, epochs, learning_rate, device, rounds, seed=None):
+def train(net, trainloader, valloader, epochs, optim_params, device, rounds, seed=None):
     """Train the model on the training set."""
     if seed is not None:
         set_seed(seed)
@@ -98,7 +110,12 @@ def train(net, trainloader, valloader, epochs, learning_rate, device, rounds, se
 
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+    optimizer = torch.optim.SGD(
+        net.parameters(),
+        lr=optim_params["optim-learning-rate"],
+        momentum=optim_params["optim-momentum"],
+        weight_decay=optim_params["optim-weight-decay"],
+    )
     net.train()
     for epoch in range(epochs):
         # set seed for trainloader to ensure the same seed sequence for each epoch
