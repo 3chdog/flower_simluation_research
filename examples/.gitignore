@@ -1,3 +1,4 @@
 *.bu
 README.md
 */models/*
+*.npz

@@ -8,7 +8,7 @@ from typing import List, Tuple
 from flwr.common import Context, Metrics, ndarrays_to_parameters
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 
-from pytorchexample.task import Net, get_weights, set_seed
+from pytorchexample.task import Net, get_weights, set_weights, set_seed
 from pytorchexample.strategy import FedAvgWithSaving, on_fit_config
 
 
@@ -43,11 +43,17 @@ def server_fn(context: Context):
         os.makedirs(info_for_model_saving["saving_folder"])
 
     # Initialize model parameters
-    if seed is None:
-        print("Not set seed, run FL generally.")
+    init_weights_path = context.run_config.get("init-weights", None)
+    if init_weights_path is None:
+        if seed is None:
+            print("Not set seed, run FL generally.")
+        else:
+            set_seed(seed)
+        ndarrays = get_weights(Net())
     else:
-        set_seed(seed)
-    ndarrays = get_weights(Net())
+        print(f"Loading initial weights from {init_weights_path}")
+        raw_init_ndarrays = np.load(init_weights_path)
+        ndarrays = [raw_init_ndarrays[key] for key in raw_init_ndarrays.files]
     print("\n===  server initial parameters:\n{}\n===\n".format(ndarrays[0].flatten()[:30]))
     parameters = ndarrays_to_parameters(ndarrays)
 

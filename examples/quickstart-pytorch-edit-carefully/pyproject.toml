@@ -34,6 +34,7 @@ seed = 45
 model-name = "lenet" # ("lenet", "resnet50", "lenet_for_cifar10")
 dataset-name = "cifar10" # ("cifar10", "mnist")
 saving-period = 5
+init-weights = "./cifar10-lenet-num-2-seed-45-lr-0.001-round-2-weights.npz"
 
 [tool.flwr.federations]
 default = "local-simulation-gpu"
