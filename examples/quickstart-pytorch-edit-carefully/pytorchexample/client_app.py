@@ -60,7 +60,8 @@ def client_fn(context: Context):
     # Read run_config to fetch hyperparameters relevant to this run
     seed = context.run_config.get("seed", None)
     batch_size = context.run_config["batch-size"]
-    trainloader, valloader = load_data(partition_id, num_partitions, batch_size, seed)
+    hetero = context.run_config["hetero"]
+    trainloader, valloader = load_data(partition_id, num_partitions, batch_size, hetero, seed)
     local_epochs = context.run_config["local-epochs"]
     optim_params = get_optim_params(context.run_config)
 
