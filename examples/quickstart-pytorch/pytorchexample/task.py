@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from flwr_datasets import FederatedDataset
-from flwr_datasets.partitioner import IidPartitioner
+from flwr_datasets.partitioner import IidPartitioner, DirichletPartitioner
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize, ToTensor
 
@@ -45,12 +45,21 @@ def set_weights(net, parameters):
 fds = None  # Cache FederatedDataset
 
 
-def load_data(partition_id: int, num_partitions: int, batch_size: int):
+def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: int):
     """Load partition CIFAR10 data."""
     # Only initialize `FederatedDataset` once
     global fds
     if fds is None:
-        partitioner = IidPartitioner(num_partitions=num_partitions)
+        if hetero:
+            partitioner = DirichletPartitioner(
+                num_partitions=num_partitions,
+                partition_by="label",
+                alpha=0.5,
+                min_partition_size=10,
+                self_balancing=True,
+            )
+        else:
+            partitioner = IidPartitioner(num_partitions=num_partitions)
         fds = FederatedDataset(
             dataset="uoft-cs/cifar10",
             partitioners={"train": partitioner},
