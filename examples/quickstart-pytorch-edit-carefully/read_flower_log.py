@@ -18,7 +18,7 @@ class Experiment_Result:
 
 
 
-def get_every_exp_lines(lines: list):
+def get_every_exp_lines(lines: list) -> list[list[str]]:
     all_exp_lines = []
     one_exp_lines = []
     start_flag = False
@@ -199,7 +199,7 @@ def plot_metric(
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.savefig(file_name)
 
-def main(log_path: str):
+def get_exp_results_from_log(log_path: str, mode="original") -> list[Experiment_Result]:
     # read log
     with open(log_path, 'r') as f:
         lines = f.read().split('\n')
@@ -211,16 +211,25 @@ def main(log_path: str):
     for i in range(1, len(all_exp_lines) + 1):
         hyperparameters = get_all_hyperparamters_from_one_exp_lines(all_exp_lines[i-1])
         num_clients = hyperparameters["num_clients"]
+        lr_str = "0_01" if hyperparameters["learning_rate"]==0.01 else "0_001"
         losses = get_losses_from_one_exp_lines(all_exp_lines[i-1], server_rounds=hyperparameters["server_rounds"])
         accuracies = get_accuracies_from_one_exp_lines(all_exp_lines[i-1], server_rounds=hyperparameters["server_rounds"])
         all_exp_results.append(
             Experiment_Result(
-                exp_name=f"exp_{i}th_{num_clients}_clients",
+                exp_name=f"{num_clients}_clients_lr_{lr_str}_{i}th_{mode}",
                 hyperparameters=hyperparameters,
                 metrics=Metrics(loss=losses, accuracy=accuracies)
             )
         )
-    # print(all_exp_results[0])
+    return all_exp_results
+
+def main(list_log_path: list[str]):
+    # read flwr log
+    all_exp_results = []
+    modes = ["original", "edited"]
+    for log_path, mode in zip(list_log_path, modes):
+        all_exp_results += get_exp_results_from_log(log_path, mode)[:24]
+    # for exp in all_exp_results: print(exp.exp_name, exp.hyperparameters, len(exp.metrics.loss), len(exp.metrics.accuracy))
 
     # start plotting
     # fig name template: "diff_num_clients_exp_under_same_lr_e_2_iid_500rounds_Loss.jpg"
@@ -237,12 +246,12 @@ def main(log_path: str):
     for exp_ids, title, fig_name, max_show_rnd in zip(list_exp_ids, titles_loss, fig_name_loss, list_max_show_rnd):
         experiments = prepare_for_plot([all_exp_results[i] for i in exp_ids], "loss", max_show_rnd)
         y_label="Loss"
-        plot_metric(
-            experiments=experiments,
-            y_label=y_label,
-            fig_title=title,
-            file_name=fig_name,
-        )
+        # plot_metric(
+        #     experiments=experiments,
+        #     y_label=y_label,
+        #     fig_title=title,
+        #     file_name=fig_name,
+        # )
 
     # plot Accuracy
     titles_acc = ["Accuracy Curves with lr {} and {} under Different Number of Clients".format(
@@ -252,14 +261,19 @@ def main(log_path: str):
     for exp_ids, title, fig_name, max_show_rnd in zip(list_exp_ids, titles_acc, fig_name_acc, list_max_show_rnd):
         experiments = prepare_for_plot([all_exp_results[i] for i in exp_ids], "accuracy", max_show_rnd)
         y_label="Accuracy"
-        plot_metric(
-            experiments=experiments,
-            y_label=y_label,
-            fig_title=title,
-            file_name=fig_name,
-        )
+        # plot_metric(
+        #     experiments=experiments,
+        #     y_label=y_label,
+        #     fig_title=title,
+        #     file_name=fig_name,
+        # )
 
     return all_exp_results
 
 if __name__ == "__main__":
-    main("sim_exp_0307_iid_and_noniid_with_diff_num_clients_500rounds.log")
+    main(
+        [
+            "/home/jack/jacklab/flowerHome/flower_simluation_research/examples/quickstart-pytorch/sim_exp_0324_76.log",
+            "/home/jack/jacklab/flowerHome/flower_simluation_research/examples/quickstart-pytorch/sim_exp_0324_not_full.log",
+        ]
+    )
