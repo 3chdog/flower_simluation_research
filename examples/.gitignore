@@ -1,4 +1,5 @@
 *.bu
 README.md
 */models/*
+*/exp_charts*
 *.npz
