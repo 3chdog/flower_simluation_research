@@ -178,7 +178,8 @@ def prepare_for_plot(all_exp_results: list[Experiment_Result], metric_name: str,
     return experiments
 
 def plot_metric(
-        experiments: dict[str, list[float]], # key: exp_name, value: list of metrics (one kind of metrics)
+        experiments_1: dict[str, list[float]], # key: exp_name, value: list of metrics (one kind of metrics)
+        experiments_2: dict[str, list[float]], # key: exp_name, value: list of metrics (one kind of metrics)
         y_label,
         fig_title,
         file_name="tmp.jpg",
@@ -189,8 +190,10 @@ def plot_metric(
     """
     plt.figure(figsize=(10, 6))
     
-    for exp_name, losses in experiments.items():
-        plt.plot(range(1, len(losses) + 1), losses, label=exp_name, alpha=0.7)
+    for exp_name, losses in experiments_1.items():
+        plt.plot(range(1, len(losses) + 1), losses, label=exp_name, alpha=0.7, color="red")
+    for exp_name, losses in experiments_2.items():
+        plt.plot(range(1, len(losses) + 1), losses, label=exp_name, alpha=0.7, color="blue")
     
     plt.xlabel("Server Rounds")
     plt.ylabel(y_label)
@@ -198,6 +201,7 @@ def plot_metric(
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.savefig(file_name)
+    plt.close()
 
 def get_exp_results_from_log(log_path: str, mode="original") -> list[Experiment_Result]:
     # read log
@@ -223,57 +227,202 @@ def get_exp_results_from_log(log_path: str, mode="original") -> list[Experiment_
         )
     return all_exp_results
 
+def divide_exp_results(all_exp_results: list[Experiment_Result]) -> list[list[Experiment_Result]]:
+    main_group = []
+    results_group = []
+    num_clients = 10
+    learning_rate = 0.01
+    mode = "original"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 10
+    learning_rate = 0.01
+    mode = "edited"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 20
+    learning_rate = 0.01
+    mode = "original"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 20
+    learning_rate = 0.01
+    mode = "edited"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 50
+    learning_rate = 0.01
+    mode = "original"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 50
+    learning_rate = 0.01
+    mode = "edited"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    results_group = []
+    num_clients = 10
+    learning_rate = 0.001
+    mode = "original"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 10
+    learning_rate = 0.001
+    mode = "edited"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 20
+    learning_rate = 0.001
+    mode = "original"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 20
+    learning_rate = 0.001
+    mode = "edited"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 50
+    learning_rate = 0.001
+    mode = "original"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    num_clients = 50
+    learning_rate = 0.001
+    mode = "edited"
+    for exp in all_exp_results:
+        if exp.hyperparameters["num_clients"]==num_clients:
+            if exp.hyperparameters["learning_rate"]==learning_rate:
+                if mode in exp.exp_name:
+                    results_group.append(exp)
+    main_group.append(results_group)
+    results_group = []
+    return main_group
+
 def main(list_log_path: list[str]):
     # read flwr log
     all_exp_results = []
     modes = ["original", "edited"]
     for log_path, mode in zip(list_log_path, modes):
-        all_exp_results += get_exp_results_from_log(log_path, mode)[:24]
+        all_exp_results += get_exp_results_from_log(log_path, mode)
     # for exp in all_exp_results: print(exp.exp_name, exp.hyperparameters, len(exp.metrics.loss), len(exp.metrics.accuracy))
+
+    # divide into different groups
+    all_exp_results_divided = divide_exp_results(all_exp_results)
+    for i, group in enumerate(all_exp_results_divided):
+        for exp in group:
+            print(exp.exp_name, exp.hyperparameters, len(exp.metrics.loss), len(exp.metrics.accuracy))
 
     # start plotting
     # fig name template: "diff_num_clients_exp_under_same_lr_e_2_iid_500rounds_Loss.jpg"
-    list_lr = ["e_2"]*5 + ["e_3"]*5 + ["e_2"]*5 + ["e_3"]*5
-    list_iid = ["iid"]*10 + ["non_iid"]*10
-    list_exp_ids = [[0,1,2,3,4,5,6]]*5 + [[7,8,9,10,11,12,13]]*5 + [[14,15,16,17,18,19,20]]*5 + [[21,22,23,24,25,26,27]]*5
-    list_max_show_rnd = [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500]
+    list_lr = ["e_2"]*15 + ["e_3"]*15
+    # list_iid = ["iid"]*10 + ["non_iid"]*10
+    # list_exp_ids = [[0,1,2,3,4,5,6]]*5 + [[7,8,9,10,11,12,13]]*5 + [[14,15,16,17,18,19,20]]*5 + [[21,22,23,24,25,26,27]]*5
+    list_num_clients = [10]*5 + [20]*5 + [50]*5 + [10]*5 + [20]*5 + [50]*5
+    list_max_show_rnd = [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500] + [5, 10, 20, 100, 500]
 
     # plot Loss
-    titles_loss = ["Loss Curves with lr {} and {} under Different Number of Clients".format(
-        lr, distrib) for lr, distrib in zip(list_lr, list_iid)]
-    fig_name_loss = ["exp_charts/diff_num_clients_exp_under_same_lr_{}_{}_{}rounds_Loss.jpg".format(
-        lr, distrib, mx_show_rnd) for lr, distrib, mx_show_rnd in zip(list_lr, list_iid, list_max_show_rnd)]
-    for exp_ids, title, fig_name, max_show_rnd in zip(list_exp_ids, titles_loss, fig_name_loss, list_max_show_rnd):
-        experiments = prepare_for_plot([all_exp_results[i] for i in exp_ids], "loss", max_show_rnd)
-        y_label="Loss"
-        # plot_metric(
-        #     experiments=experiments,
-        #     y_label=y_label,
-        #     fig_title=title,
-        #     file_name=fig_name,
-        # )
+    titles_loss = ["Loss Curves with lr {} under {} Clients".format(
+        lr, distrib) for lr, distrib in zip(list_lr, list_num_clients)]
+    fig_name_loss = ["exp_charts/lr_{}_{}_clients_{}rounds_Loss.jpg".format(
+        lr, distrib, mx_show_rnd) for lr, distrib, mx_show_rnd in zip(list_lr, list_num_clients, list_max_show_rnd)]
+
+    for i in range(6):
+        exp_ori = all_exp_results_divided[i*2]
+        exp_edit = all_exp_results_divided[i*2+1]
+        for title, fig_name, max_show_rnd in zip(titles_loss[i*5:(i+1)*5], fig_name_loss[i*5:(i+1)*5], list_max_show_rnd[i*5:(i+1)*5]):
+            exp_ori_metric = prepare_for_plot(exp_ori, "loss", max_show_rnd)
+            exp_edit_metric = prepare_for_plot(exp_edit, "loss", max_show_rnd)
+            y_label="Loss"
+            plot_metric(
+                experiments_1=exp_ori_metric,
+                experiments_2=exp_edit_metric,
+                y_label=y_label,
+                fig_title=title,
+                file_name=fig_name,
+            )
 
     # plot Accuracy
-    titles_acc = ["Accuracy Curves with lr {} and {} under Different Number of Clients".format(
-        lr, distrib) for lr, distrib in zip(list_lr, list_iid)]
-    fig_name_acc = ["exp_charts/diff_num_clients_exp_under_same_lr_{}_{}_{}rounds_Accuracy.jpg".format(
-        lr, distrib, mx_show_rnd) for lr, distrib, mx_show_rnd in zip(list_lr, list_iid, list_max_show_rnd)]
-    for exp_ids, title, fig_name, max_show_rnd in zip(list_exp_ids, titles_acc, fig_name_acc, list_max_show_rnd):
-        experiments = prepare_for_plot([all_exp_results[i] for i in exp_ids], "accuracy", max_show_rnd)
-        y_label="Accuracy"
-        # plot_metric(
-        #     experiments=experiments,
-        #     y_label=y_label,
-        #     fig_title=title,
-        #     file_name=fig_name,
-        # )
+    titles_acc = ["Accuracy Curves with lr {} under {} Clients".format(
+        lr, distrib) for lr, distrib in zip(list_lr, list_num_clients)]
+    fig_name_acc = ["exp_charts/lr_{}_{}_clients_{}rounds_Accuracy.jpg".format(
+        lr, distrib, mx_show_rnd) for lr, distrib, mx_show_rnd in zip(list_lr, list_num_clients, list_max_show_rnd)]
+
+    for i in range(6):
+        exp_ori = all_exp_results_divided[i*2]
+        exp_edit = all_exp_results_divided[i*2+1]
+        for title, fig_name, max_show_rnd in zip(titles_acc[i*5:(i+1)*5], fig_name_acc[i*5:(i+1)*5], list_max_show_rnd[i*5:(i+1)*5]):
+            exp_ori_metric = prepare_for_plot(exp_ori, "accuracy", max_show_rnd)
+            exp_edit_metric = prepare_for_plot(exp_edit, "accuracy", max_show_rnd)
+            y_label="Accuracy"
+            plot_metric(
+                experiments_1=exp_ori_metric,
+                experiments_2=exp_edit_metric,
+                y_label=y_label,
+                fig_title=title,
+                file_name=fig_name,
+            )
 
     return all_exp_results
 
 if __name__ == "__main__":
     main(
         [
-            "/home/jack/jacklab/flowerHome/flower_simluation_research/examples/quickstart-pytorch/sim_exp_0324_76.log",
-            "/home/jack/jacklab/flowerHome/flower_simluation_research/examples/quickstart-pytorch/sim_exp_0324_not_full.log",
+            "sim_exp_0324_original_quickstart.log",
+            "sim_exp_0324_edited_quickstart.log",
         ]
     )
