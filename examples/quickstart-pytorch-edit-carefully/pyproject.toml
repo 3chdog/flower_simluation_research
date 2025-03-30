@@ -42,9 +42,6 @@ saving-period = 5
 [tool.flwr.federations]
 default = "local-simulation-gpu"
 
-[tool.flwr.federations.local-simulation]
-options.num-supernodes = 10
-
 [tool.flwr.federations.local-simulation-gpu]
 # num-partitions in node_config is referred to num-supernodes
 options.num-supernodes = 2

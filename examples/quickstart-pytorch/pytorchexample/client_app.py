@@ -48,7 +48,6 @@ def client_fn(context: Context):
     batch_size = context.run_config["batch-size"]
     hetero = context.run_config["hetero"]
     trainloader, valloader = load_data(partition_id, num_partitions, batch_size, hetero)
-    trainloader, valloader = load_data(partition_id, num_partitions, batch_size)
     local_epochs = context.run_config["local-epochs"]
     learning_rate = context.run_config["learning-rate"]
 

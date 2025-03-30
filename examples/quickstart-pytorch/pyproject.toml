@@ -33,10 +33,7 @@ batch-size = 32
 hetero = 1
 
 [tool.flwr.federations]
-default = "local-simulation"
-
-[tool.flwr.federations.local-simulation]
-options.num-supernodes = 10
+default = "local-simulation-gpu"
 
 [tool.flwr.federations.local-simulation-gpu]
 options.num-supernodes = 10
