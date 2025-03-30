@@ -63,19 +63,22 @@ convert_string_to_array() {
     echo "${temp_array[@]}"
 }
 
+
 #############################
 ### EXPERIMENT PARAMETERS ###
 #############################
 # IMPORTANT: enter 1. the number of experiments to run 2. the number of arrays of paramters you set
 echo "[HYPERPARAMETERS SETTING]"
-n=2
-num_arrays=4
+n=3
+num_arrays=5
 pyproject_file="pyproject.toml"
+# IMPORTANT: edit p_key, p_value, and the name of the variable like p_arr{i} for each parameter
 
 # number of clients
 p_key="options.num-supernodes"
 p_value=(\
-2 \
+4 \
+4 \
 4 \
 )
 search_string_in_file "${p_key} =" "${pyproject_file}" || exit 1
@@ -87,7 +90,8 @@ p_arr1+=("${p_original}" "${TMP_ARR_BUFFER[@]}")
 p_key="num-server-rounds"
 p_value=(\
 3 \
-5 \
+3 \
+3 \
 )
 search_string_in_file "${p_key} =" "${pyproject_file}" || exit 1
 p_original=$(cat "${pyproject_file}" | grep "${p_key} = [0-9]\+")
@@ -97,10 +101,9 @@ p_arr2+=("${p_original}" "${TMP_ARR_BUFFER[@]}")
 # learning rate
 p_key="learning-rate"
 p_value=(\
-0.1 \
 0.01 \
-0.001 \
-0.0001 \
+0.01 \
+0.01 \
 )
 search_string_in_file "${p_key} =" "${pyproject_file}" || exit 1
 p_original=$(cat "${pyproject_file}" | grep "${p_key} = [0-9]\+")
@@ -111,12 +114,23 @@ p_arr3+=("${p_original}" "${TMP_ARR_BUFFER[@]}")
 p_key="hetero"
 p_value=(\
 0 \
-1 \
+0 \
+0 \
 )
 search_string_in_file "${p_key} =" "${pyproject_file}" || exit 1
 p_original=$(cat "${pyproject_file}" | grep "${p_key} = [0-9]\+")
 generate_array "${p_key}" "${p_value[@]}"
 p_arr4+=("${p_original}" "${TMP_ARR_BUFFER[@]}")
+
+# seeds
+p_key="seed"
+for ((i=0; i<n; i++)); do
+    p_value[i]=$RANDOM
+done
+search_string_in_file "${p_key} =" "${pyproject_file}" || exit 1
+p_original=$(cat "${pyproject_file}" | grep "${p_key} = [0-9]\+")
+generate_array "${p_key}" "${p_value[@]}"
+p_arr5+=("${p_original}" "${TMP_ARR_BUFFER[@]}")
 
 
 ###########################
