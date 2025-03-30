@@ -1,6 +1,7 @@
 """pytorchexample: A Flower / PyTorch app."""
 
 from collections import OrderedDict
+from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
@@ -10,6 +11,12 @@ from flwr_datasets.partitioner import IidPartitioner, DirichletPartitioner
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize, ToTensor
 
+@dataclass
+class OptimizerParameters:
+    name: str = "SGD" # flower expamle default
+    learning_rate: float = 0.1 # flower expamle default
+    momentum: float = 0.9 # flower expamle default
+    weight_decay: float = 0 # torch default
 
 class Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: A 60 Minute Blitz')"""
@@ -45,9 +52,11 @@ def set_weights(net, parameters):
 fds = None  # Cache FederatedDataset
 
 
-def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: int):
+def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: int, seed: int = None):
     """Load partition CIFAR10 data."""
     # Only initialize `FederatedDataset` once
+    if seed is None:
+        seed = 42
     global fds
     if fds is None:
         if hetero:
@@ -84,11 +93,29 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: i
     return trainloader, testloader
 
 
-def train(net, trainloader, valloader, epochs, learning_rate, device):
+def get_optimizer(net, optimizer_parameters: OptimizerParameters):
+    """Get optimizer based on the parameters."""
+    if optimizer_parameters.name == "SGD":
+        return torch.optim.SGD(
+            net.parameters(),
+            lr=optimizer_parameters.learning_rate,
+            momentum=optimizer_parameters.momentum,
+            weight_decay=optimizer_parameters.weight_decay,
+        )
+    elif optimizer_parameters.name == "Adam":
+        return torch.optim.Adam(
+            net.parameters(),
+            lr=optimizer_parameters.learning_rate,
+            weight_decay=optimizer_parameters.weight_decay,
+        )
+    else:
+        raise ValueError(f"Unsupported optimizer: {optimizer_parameters.name}")
+
+def train(net, trainloader, valloader, epochs, optimizer_parameters: OptimizerParameters, device):
     """Train the model on the training set."""
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
+    optimizer = get_optimizer(net, optimizer_parameters)
     net.train()
     for _ in range(epochs):
         for batch in trainloader:

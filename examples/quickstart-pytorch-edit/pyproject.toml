@@ -25,17 +25,21 @@ serverapp = "pytorchexample.server_app:app"
 clientapp = "pytorchexample.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 500
+num-server-rounds = 3
 fraction-evaluate = 0.5
 local-epochs = 1
 learning-rate = 0.01
 batch-size = 32
-hetero = 1
+hetero = 0
+optimizer-name = "SGD"
+optimizer-learning_rate = 0.01
+optimizer-momentum = 0.9
+optimizer-weight_decay = 0
 
 [tool.flwr.federations]
 default = "local-simulation-gpu"
 
 [tool.flwr.federations.local-simulation-gpu]
-options.num-supernodes = 20
+options.num-supernodes = 4
 options.backend.client-resources.num-cpus = 2 # each ClientApp assumes to use 2CPUs
 options.backend.client-resources.num-gpus = 0.2 # at most 5 ClientApp will run in a given GPU
