@@ -6,7 +6,7 @@ from flwr.common import Context, Metrics, ndarrays_to_parameters
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 from flwr.server.strategy import FedAvg
 
-from pytorchexample.task import Net, get_weights
+from pytorchexample.task import Net, get_weights, set_seed
 
 
 # Define metric aggregation function
@@ -24,8 +24,12 @@ def server_fn(context: Context):
 
     # Read from config
     num_rounds = context.run_config["num-server-rounds"]
-
+    seed = context.run_config.get("seed", None)
     # Initialize model parameters
+    if seed is None:
+        print("Not set seed, run FL generally.")
+    else:
+        set_seed(seed)
     ndarrays = get_weights(Net())
     parameters = ndarrays_to_parameters(ndarrays)
 

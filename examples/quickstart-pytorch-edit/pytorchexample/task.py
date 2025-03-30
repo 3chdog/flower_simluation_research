@@ -11,12 +11,28 @@ from flwr_datasets.partitioner import IidPartitioner, DirichletPartitioner
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize, ToTensor
 
+import random
+import numpy as np
+
 @dataclass
 class OptimizerParameters:
     name: str = "SGD" # flower expamle default
     learning_rate: float = 0.1 # flower expamle default
     momentum: float = 0.9 # flower expamle default
     weight_decay: float = 0 # torch default
+
+def set_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 用於多 GPU 訓練
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False  # 可能會降低性能，但可確保結果一致
+
+def generate_seeds_for_epochs(num_random_numbers: int, seed:int):
+    np.random.seed(seed)
+    return np.random.randint(0, 2**32 - 1, size=round(num_random_numbers*1.5)).tolist()
 
 class Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: A 60 Minute Blitz')"""
@@ -52,7 +68,7 @@ def set_weights(net, parameters):
 fds = None  # Cache FederatedDataset
 
 
-def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: int, seed: int = None):
+def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: int = 0, seed: int = None):
     """Load partition CIFAR10 data."""
     # Only initialize `FederatedDataset` once
     if seed is None:
@@ -75,7 +91,7 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int, hetero: i
         )
     partition = fds.load_partition(partition_id)
     # Divide data on each node: 80% train, 20% test
-    partition_train_test = partition.train_test_split(test_size=0.2, seed=42)
+    partition_train_test = partition.train_test_split(test_size=0.2, seed=seed)
     pytorch_transforms = Compose(
         [ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
@@ -111,13 +127,26 @@ def get_optimizer(net, optimizer_parameters: OptimizerParameters):
     else:
         raise ValueError(f"Unsupported optimizer: {optimizer_parameters.name}")
 
-def train(net, trainloader, valloader, epochs, optimizer_parameters: OptimizerParameters, device):
+def train(net, trainloader, valloader, epochs, optimizer_parameters: OptimizerParameters, device, rounds, seed=None):
     """Train the model on the training set."""
+
+    ###   seed section   ###
+    if seed is not None:
+        set_seed(seed)
+        seeds_for_epochs = generate_seeds_for_epochs(epochs*rounds, seed)
+    ### end seed section ###
+
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = get_optimizer(net, optimizer_parameters)
     net.train()
-    for _ in range(epochs):
+    for epoch in range(epochs):
+        ###   seed section   ###
+        # set seed for trainloader to ensure the same seed sequence for each epoch
+        if seed is not None:
+            seed_for_this_epoch = seeds_for_epochs[((rounds-1) * epochs + epoch) % len(seeds_for_epochs)]
+            torch.manual_seed(seed_for_this_epoch)
+        ### end seed section ###
         for batch in trainloader:
             images = batch["img"]
             labels = batch["label"]

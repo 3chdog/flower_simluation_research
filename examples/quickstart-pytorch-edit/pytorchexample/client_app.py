@@ -23,6 +23,9 @@ class FlowerClient(NumPyClient):
         self.local_epochs = local_epochs
         self.optimizer_parameters = optimizer_parameters
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.cid = cid
+        self.rounds = rounds
+        self.seed = seed
 
     def fit(self, parameters, config):
         """Train the model with data of this client."""
@@ -34,6 +37,8 @@ class FlowerClient(NumPyClient):
             self.local_epochs,
             self.optimizer_parameters,
             self.device,
+            self.rounds,
+            self.seed,
         )
         return get_weights(self.net), len(self.trainloader.dataset), results
 
@@ -52,8 +57,8 @@ def client_fn(context: Context):
     num_partitions = context.node_config["num-partitions"] # options.num-supernodes
     rounds = context.run_config["num-server-rounds"]
     batch_size = context.run_config["batch-size"]
-    hetero = context.run_config["hetero"]
     local_epochs = context.run_config["local-epochs"]
+    hetero = context.run_config.get("hetero")
     seed = context.run_config.get("seed", None)
     optimizer_parameters_dict = get_optimizer_parameters_dict(context.run_config)
     optimizer_parameters = OptimizerParameters(**optimizer_parameters_dict)
