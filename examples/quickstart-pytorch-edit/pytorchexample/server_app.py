@@ -4,10 +4,9 @@ from typing import List, Tuple
 
 from flwr.common import Context, Metrics, ndarrays_to_parameters
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
-from flwr.server.strategy import FedAvg
 
-from pytorchexample.task import Net, get_weights, set_seed
-
+from pytorchexample.strategy import FedAvgWithSaving, on_fit_config
+from pytorchexample.task import Net, get_weights, set_seed, go_check_weights
 
 # Define metric aggregation function
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
@@ -31,15 +30,19 @@ def server_fn(context: Context):
     else:
         set_seed(seed)
     ndarrays = get_weights(Net())
+    if go_check_weights: print("\n===  server initial parameters:\n{}\n===\n".format(ndarrays[0].flatten()[:30]))
     parameters = ndarrays_to_parameters(ndarrays)
 
     # Define the strategy
-    strategy = FedAvg(
+    strategy = FedAvgWithSaving(
         fraction_fit=1.0,
         fraction_evaluate=context.run_config["fraction-evaluate"],
         min_available_clients=2,
         evaluate_metrics_aggregation_fn=weighted_average,
         initial_parameters=parameters,
+        on_fit_config_fn=on_fit_config, # send round number in "config" to clients
+        inplace=False,
+        seed=seed,
     )
     config = ServerConfig(num_rounds=num_rounds)
 

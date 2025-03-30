@@ -4,7 +4,7 @@ import torch
 from flwr.client import ClientApp, NumPyClient
 from flwr.common import Context
 
-from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train, OptimizerParameters
+from pytorchexample.task import Net, get_weights, load_data, set_weights, test, train, OptimizerParameters, go_check_weights
 
 def get_optimizer_parameters_dict(run_config: dict) -> dict:
     optimizer_parameters = {}
@@ -23,12 +23,14 @@ class FlowerClient(NumPyClient):
         self.local_epochs = local_epochs
         self.optimizer_parameters = optimizer_parameters
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.cid = cid
+        self.cid: int = cid
         self.rounds = rounds
         self.seed = seed
 
     def fit(self, parameters, config):
         """Train the model with data of this client."""
+        # if go_check_weights:
+        #     if self.cid==1: print("\n===  cid {} at round #{} parameters:\n{}\n===\n".format(self.cid, config["round_num"], parameters[0].flatten()[:30]))
         set_weights(self.net, parameters)
         results = train(
             self.net,

@@ -14,6 +14,8 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 import random
 import numpy as np
 
+go_check_weights = True
+
 @dataclass
 class OptimizerParameters:
     name: str = "SGD" # flower expamle default
@@ -145,7 +147,7 @@ def train(net, trainloader, valloader, epochs, optimizer_parameters: OptimizerPa
         # set seed for trainloader to ensure the same seed sequence for each epoch
         if seed is not None:
             seed_for_this_epoch = seeds_for_epochs[((rounds-1) * epochs + epoch) % len(seeds_for_epochs)]
-            torch.manual_seed(seed_for_this_epoch)
+            set_seed(seed_for_this_epoch)
         ### end seed section ###
         for batch in trainloader:
             images = batch["img"]
